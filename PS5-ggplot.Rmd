@@ -202,7 +202,7 @@ gapminder %>%
 Part 4 - GDP Per Capita
 
 
-```{r}
+```{r, message=FALSE}
 gapminder %>% 
   group_by(name) %>% 
   select(region, time, GDP_PC, lifeExpectancy, totalPopulation) %>% 
@@ -229,9 +229,51 @@ dot indicates a smaller country.
 
 
 
+```{r, message=FALSE}
+gapminder %>% 
+  group_by(name) %>% 
+  select(region, time, GDP_PC, lifeExpectancy, totalPopulation) %>% 
+  filter(time == 2019) %>% 
+  filter(GDP_PC != "NA", lifeExpectancy != "NA", name != "NA", totalPopulation != "NA") %>% 
+  ggplot() +
+  geom_point(aes(lifeExpectancy, GDP_PC, color = region, size = totalPopulation)) +
+  labs(title = "2019 GDP PerCap. vs Life Expectancy", x = "Life Expectancy (Yr)", 
+       y = "GDP Per Capita (Constant 2010 US$)", color ="Continent", size = "Country \n Size")
+```
 
 
 
+The scatter plot suggests that countries across diffferent continents have closer in life expectancy.
+However theres is still a gap in GDP per capita depending on the Continent. For exmaple, 
+countries in Europe have highest GDP per capita and life expectancy, while, countries in Africa 
+have lower life expectancy and lowest GDP per capita. _Edit this_ 
+
+
+
+
+**Compare these two plots and comment what do you see. How has world developed through the last 60 years?
+
+_Answer_
+
+
+
+
+
+```{r, message=FALSE}
+gapminder %>%
+  group_by(region, time) %>% 
+  select(lifeExpectancy, time) %>% 
+  filter(lifeExpectancy !="NA", region != "NA") %>% 
+  filter(time == 1960 | time == 2019) %>% 
+  summarise(avg_life_exp_reg = unique(mean(lifeExpectancy)))
+
+```
+
+_do the results fit?_ 
+
+
+Compute the average LE growth from 1960-2019 across the continents. Show the results in the order of growth. Explain what do you see.
+Hint: these data (data in long form) is not the simplest to compute growth. But you may want to check out the lag() function. And do not forget to group data by continent when using lag(), otherwise your results will be messed up! 
 
 
 
