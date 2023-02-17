@@ -1,0 +1,253 @@
+---
+title: "PS5-ggplot"
+author: "tiff"
+date: "2023-02-17"
+output: html_document
+---
+
+Part 1 - Load and Check Data:
+
+```{r, message=FALSE}
+library(tidyverse)
+
+gapminder <- read_delim("data/gapminder.csv.bz2")
+```
+
+The data contains `r nrow(gapminder)` observations and has `r ncol(gapminder)`
+variables.
+
+Sample of the dataset use knitr:: kable
+```{r, message=FALSE}
+gapminder %>% 
+  sample_n(3) 
+
+```
+
+The sample looks good, there are some missing values "NA", but the rest is organized,
+clear, and the obervations makes sense with the variable
+
+
+Part 2 - Descriptive Statistics:
+
+
+```{r, message=FALSE}
+gapminder %>%
+  select(iso3, iso2, name) %>% 
+  summarise( iso3 = length(unique(iso3)),
+            iso2 = length(unique(iso2)),
+            name = length(unique(name)))
+```
+
+
+Part A
+ 
+```{r, message=FALSE}
+gapminder %>%
+  group_by(iso2) %>% 
+  summarise(iso2code = n_distinct(name)) %>% 
+  arrange(desc(iso2code))
+
+```
+
+Part B
+
+```{r, message=FALSE}
+gapminder %>%
+  group_by(name) %>% 
+  summarise(iso3code = n_distinct(iso3)) %>% 
+  arrange(desc(iso3code))
+```
+
+
+
+Min and Max years in these data
+
+```{r, message=FALSE}
+gapminder %>% 
+  filter(!is.na (time)) %>% 
+  select(time) %>%
+  summarise( minimum_year = min(time), maximum_year = max(time))
+  
+```
+
+
+Part 3 - CO2 Emmissions
+
+
+```{r, message=FALSE}
+gapminder %>% 
+  group_by(time) %>% 
+  filter(is.na(co2), is.na(co2_PC)) %>% 
+  count() %>% 
+  arrange(desc(n))
+
+```
+
+(different variables, same numbers for the Co2 and Co2_PC)
+
+```{r, message=FALSE}
+total_CO2<- gapminder %>% 
+  group_by(iso3, time) %>% 
+  filter(co2 != "NA", name != "NA") %>% 
+  summarise(avgCO2 = mean(co2)) %>% 
+  filter(iso3 == "USA" | iso3 == "CHN" | iso3 == "IND" | iso3 == "VNM" | iso3 == "KOR")
+  
+ 
+
+total_CO2 %>% 
+  ggplot(aes(time, avgCO2, col = factor(iso3))) +
+  geom_line() +
+  labs(x = "Time (yr)", y = "Average CO2 Emmission (kt)", col = "Countries",
+       title = "Average CO2 Emission Over Year")
+```
+
+
+
+The graph suggests that out of the 5 countries chosen, China on average emits the highest amount
+of Co2 after around 2005. China has the greatest positive trend throughout the years with a spike
+in emissions after year 2000. The US started with the greatest amount of average co2 emission but 
+has not had any major spikes, and is number 2 after 2000. While India, Korea, and Vietnam
+emits the least amount of Co2 throughout the years in this group. 
+
+
+
+
+```{r, message=FALSE}
+percapita <- gapminder %>%
+  group_by(iso3, time) %>% 
+  filter(co2_PC != "NA", name != "NA") %>%
+  summarise(avgcapita = mean(co2_PC)) %>% 
+  filter(iso3 == "USA" | iso3 == "CHN" | iso3 == "IND" | iso3 == "VNM" | iso3 == "KOR")
+
+
+percapita %>%
+  ggplot(aes(time, avgcapita, col = factor(iso3))) +
+  geom_line() +
+  labs(x = "Time (yr)", y = "Average CO2 Emmission Per Capita (kt)", col = "Countries", 
+       title = "Average CO2 Emission CP Over Year")
+
+```
+
+
+
+The graph suggests that the USA has the greatest average Co2 emission per-capita from 1960 to
+2019, however there is a steady negative trend with the US releasing less CO2 per-capita in 2019 
+than compared to previous years. With the other countries, there is a positive trend where 
+they have been increasing CO2 emissions per-capital. 
+
+
+
+
+
+```{r, message=FALSE}
+gapminder %>%
+  group_by(region, time) %>% 
+  filter(time == 1960 | time ==2016) %>% 
+  filter(co2_PC != "NA", region !="NA") %>%
+  summarise(avgCO2_PC = mean(co2_PC))
+
+```
+
+Comment: what do you see?**
+
+Region is split into continents, the variable time is in order of years from 1960 to 2019, and 
+the average co2 emission per capita typically has a positive trend over the years. Except for 
+the Americas where it is has a negative trend.
+*****
+
+
+
+
+```{r, message=FALSE}
+gapminder %>%
+  group_by(region, time) %>% 
+  filter(time == 1960 | time == 2016) %>% 
+  filter(co2_PC != "NA", region !="NA") %>%
+  summarise(avgCO2_PC = unique(mean(co2_PC))) %>% 
+  
+  ggplot() +
+  geom_col(aes(x = region, y = avgCO2_PC, fill = factor(time)), position = "dodge") +
+  labs(title = "Average CO2 PC emission per Continent", 
+           x = "Continent", y = "Average CO2 PC Emission (kt)", fill = "Year")
+
+```
+
+
+The bar chart suggests that in Africa, Asia, Europe, and Oceania the average CO2 emission per-capita 
+were higher in 2016 than compared to 1960. However, in the Americas, average CO2 emission per-capita
+was lower than it wa in 1960.
+
+
+
+
+
+
+Year 2019 does not work, switch year to 2016, Checked with other TAs during OH
+
+```{r, message=FALSE}
+gapminder %>% 
+  group_by(region) %>% 
+  filter(time == 2016) %>% 
+  filter(name != "NA", co2_PC != "NA", region != "NA") %>% 
+  select(name, co2_PC) %>% 
+  filter(rank(co2_PC) < 4 | rank(desc(co2_PC)) < 4) %>% 
+  mutate(rank = co2_PC) %>% 
+  arrange(region, co2_PC)
+
+
+```
+
+
+
+Part 4 - GDP Per Capita
+
+
+```{r}
+gapminder %>% 
+  group_by(name) %>% 
+  select(region, time, GDP_PC, lifeExpectancy, totalPopulation) %>% 
+  filter(time == 1960) %>% 
+  filter(GDP_PC != "NA", lifeExpectancy != "NA", name != "NA", totalPopulation != "NA") %>% 
+  ggplot() +
+  geom_point(aes(lifeExpectancy, GDP_PC, color = region, size = totalPopulation)) +
+  labs(title = "1960 GDP PerCap. vs Life Expectancy", x = "Life Expectancy (Yr)", 
+       y = "GDP Per Capita (Constant 2010 US$)", color ="Continent", size = "Country \n Size")
+
+```
+
+
+
+The scatter plot suggests that as life expectancy increases in years, so does the GDP Per Capita. 
+Additionally, the plot depicts where continents are on the scale. For instance, we can see
+that Africa is towards the left end with lower life expectancy and lower GDP CP while Europe
+is on the right side of the plot with higher life expectancy and higher GDP CP. It also specifies
+how large a country is by the size of the dot. Larger dot indicates a larger country and smaller
+dot indicates a smaller country. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
