@@ -191,7 +191,6 @@ gapminder %>%
   filter(name != "NA", co2_PC != "NA", region != "NA") %>% 
   select(name, co2_PC) %>% 
   filter(rank(co2_PC) < 4 | rank(desc(co2_PC)) < 4) %>% 
-  mutate(rank = co2_PC) %>% 
   arrange(region, co2_PC)
 
 
@@ -265,15 +264,92 @@ gapminder %>%
   select(lifeExpectancy, time) %>% 
   filter(lifeExpectancy !="NA", region != "NA") %>% 
   filter(time == 1960 | time == 2019) %>% 
-  summarise(avg_life_exp_reg = unique(mean(lifeExpectancy)))
+  summarise(avg_life_exp_reg = (mean(lifeExpectancy)))
 
 ```
 
 _do the results fit?_ 
 
 
-Compute the average LE growth from 1960-2019 across the continents. Show the results in the order of growth. Explain what do you see.
-Hint: these data (data in long form) is not the simplest to compute growth. But you may want to check out the lag() function. And do not forget to group data by continent when using lag(), otherwise your results will be messed up! 
+
+
+
+
+```{r, message=FALSE}
+gapminder %>%
+  select(region, lifeExpectancy, time) %>% 
+  filter(!is.na(lifeExpectancy), !is.na(region)) %>% 
+  filter(time == 1960 | time == 2019) %>% 
+  group_by(region, time) %>%
+  summarise(avg_exp = mean(lifeExpectancy)) %>% 
+  summarise(prev = lag(avg_exp),
+         growth = avg_exp - prev) %>% 
+  filter(!is.na(prev), !is.na(growth)) %>% 
+  arrange(desc(growth))
+```
+
+_Explain what you see_
+
+
+
+
+
+```{r, message=FALSE}
+gapminder %>% 
+  filter(time == 1960 | time == 2019) %>% 
+  filter(!is.na(region), !is.na (name), !is.na(GDP_PC)) %>% 
+  ggplot() +
+  geom_histogram(aes(GDP_PC, fill = factor(time)), position = "dodge") +
+  labs(title = "CDP Per Capita for years of 1960 & 2019", x = "CDP_PC (Constant US 2010$)",
+       y = "Count", fill = "Year")
+
+```
+
+_Explain/comment_
+
+
+
+
+
+
+
+```{r, message=FALSE}
+gapminder %>%
+  select(name, time, lifeExpectancy) %>% 
+  filter(!is.na(time), !is.na(lifeExpectancy), !is.na(name)) %>%
+  filter(time == 1960 ) %>% 
+  mutate(rank(desc(lifeExpectancy))) %>%
+  arrange(desc(rank(lifeExpectancy))) %>% 
+  filter(name == "United States of America")
+```
+
+
+
+
+```{r}
+gapminder %>%
+  select(name, time, lifeExpectancy) %>% 
+  filter(!is.na(time), !is.na(lifeExpectancy), !is.na(name)) %>%
+  filter(time == 2019 ) %>% 
+  mutate(rank(desc(lifeExpectancy))) %>%
+  arrange(desc(rank(lifeExpectancy))) %>% 
+  filter(name == "United States of America")
+```
+
+
+
+8. (6pt) If you did this correctly, then you noticed that US ranking has been falling quite a bit. But we also have more countries in 2019–what about the relative rank divided by the corresponding number of countries that have LE data in the corresponding year?
+Hint: 0.0904 for 1960.
+
+
+
+
+
+2
+
+
+I spent 8 hours opn this assingment 
+
 
 
 
