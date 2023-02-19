@@ -15,6 +15,10 @@ gapminder <- read_delim("data/gapminder.csv.bz2")
 ```
 
 **Question 2**
+```{r, message=FALSE}
+nrow(gapminder)
+ncol(gapminder)
+```
 
 
 The data contains `r nrow(gapminder)` observations and has `r ncol(gapminder)`
